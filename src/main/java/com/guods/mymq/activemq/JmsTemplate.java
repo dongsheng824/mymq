@@ -22,6 +22,11 @@ public abstract class JmsTemplate {
 
 	public abstract Object action(Session session) throws JMSException;
 
+	/**
+	 * 执行后关闭session
+	 * @return
+	 * @throws JMSException
+	 */
 	public Object execute() throws JMSException{
 		//获取连接，开启session
 		beginSession();
@@ -29,6 +34,19 @@ public abstract class JmsTemplate {
 		Object object = action(session);
 		//关闭session，释放连接
 		endSession();
+		return object;
+	}
+	
+	/**
+	 * 不关系session执行
+	 * @return
+	 * @throws JMSException
+	 */
+	public Object sessionPersistExecute() throws JMSException{
+		//获取连接，开启session
+		beginSession();
+		//处理事务
+		Object object = action(session);
 		return object;
 	}
 	

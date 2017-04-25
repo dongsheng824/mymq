@@ -140,7 +140,7 @@ public class JmsAction {
 					public void onMessage(Message message) {
 						TextMessage textMessage = (TextMessage) message;
 						try {
-							System.out.println(textMessage.getText());
+							System.out.println("收到主题：" + textMessage.getText());
 						} catch (JMSException e) {
 							e.printStackTrace();
 						}
@@ -148,6 +148,6 @@ public class JmsAction {
 				});
 				return null;
 			}
-		}.execute();
+		}.sessionPersistExecute();
 	}
 }
