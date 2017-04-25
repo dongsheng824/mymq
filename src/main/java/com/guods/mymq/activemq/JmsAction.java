@@ -1,14 +1,18 @@
 package com.guods.mymq.activemq;
 
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
 
 /**
- * 执行activemq的各种业务操作
+ * activemq的各种业务操作
  * @author guods
  *
  */
@@ -42,6 +46,22 @@ public class JmsAction {
 		}.execute();
 	};
 
+	/**
+	 * 创建topic
+	 * @param topicName
+	 * @return
+	 * @throws JMSException
+	 */
+	public Topic createTopic(final String topicName) throws JMSException{
+		return (Topic) new JmsTemplate(connectionPool) {
+			
+			@Override
+			public Object action(Session session) throws JMSException {
+				return session.createTopic(topicName);
+			}
+		}.execute();
+	}
+	
 	/**
 	 * 发送p2p消息
 	 * @param queue
@@ -82,5 +102,52 @@ public class JmsAction {
 		}.execute();
 	}
 	
+	/**
+	 * 发送主题
+	 * @param topic
+	 * @param message
+	 * @throws JMSException 
+	 */
+	public void produceTopicMessage(final Topic topic, final String message) throws JMSException{
+		new JmsTemplate(connectionPool) {
+			
+			@Override
+			public Object action(Session session) throws JMSException {
+				MessageProducer messageProducer = session.createProducer(topic);
+				messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+				TextMessage textMessage = session.createTextMessage();
+				textMessage.setText(message);
+				messageProducer.send(textMessage);
+				return null;
+			}
+		}.execute();
+	}
 	
+	/**
+	 * 接收主题
+	 * @param topic
+	 * @return
+	 * @throws JMSException 
+	 */
+	public void consumTopicMessage(final Topic topic) throws JMSException{
+		new JmsTemplate(connectionPool) {
+			
+			@Override
+			public Object action(Session session) throws JMSException {
+				MessageConsumer messageConsumer = session.createConsumer(topic);
+				messageConsumer.setMessageListener(new MessageListener() {
+					
+					public void onMessage(Message message) {
+						TextMessage textMessage = (TextMessage) message;
+						try {
+							System.out.println(textMessage.getText());
+						} catch (JMSException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+				return null;
+			}
+		}.execute();
+	}
 }
